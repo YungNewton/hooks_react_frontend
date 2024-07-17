@@ -4,7 +4,7 @@ import ProgressBar from './ProgressBar';
 import SuccessScreen from './SuccessScreen';
 import './Main.css';
 
-const socket = io('https://hooks-backend.onrender.com/');
+const socket = io('http://localhost:5000/');
 
 const Main = () => {
   const [formId, setFormId] = useState('mainForm');
@@ -13,6 +13,7 @@ const Main = () => {
   const [step, setStep] = useState('');
   const [taskId, setTaskId] = useState(null);
   const [uploadController, setUploadController] = useState(null);
+  const [zipPath, setZipPath] = useState('');
 
   useEffect(() => {
     let progressData = null;
@@ -39,26 +40,9 @@ const Main = () => {
     socket.on('task_complete', (data) => {
       if (data.task_id === taskId) {
         clearInterval(logInterval);
+        setZipPath(data.zip_path);
         setFormId('successScreen');
-
-        fetch('https://hooks-backend.onrender.com/download_output', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/zip',
-          },
-        })
-          .then((response) => response.blob())
-          .then((blob) => {
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = 'output.zip';
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-          })
-          .catch((error) => console.error('Error downloading the file:', error));
+        handleDownload(data.zip_path); // Automatically trigger the download
       }
     });
 
@@ -100,7 +84,7 @@ const Main = () => {
     setProgress(0);
     setStepVisible(false);
 
-    fetch('https://hooks-backend.onrender.com/process', {
+    fetch('http://localhost:5000/process', {
       method: 'POST',
       body: formData,
       signal: controller.signal,
@@ -131,7 +115,7 @@ const Main = () => {
     }
 
     if (taskId) {
-      fetch('https://hooks-backend.onrender.com/cancel_task', {
+      fetch('http://localhost:5000/cancel_task', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ task_id: taskId }),
@@ -146,6 +130,24 @@ const Main = () => {
           setFormId('mainForm');
         });
     }
+  };
+
+  const handleDownload = (path) => {
+    fetch(`http://localhost:5000/download_output?zip_path=${encodeURIComponent(path)}`, {
+      method: 'GET',
+    })
+      .then((response) => response.blob())
+      .then((blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = 'output.zip';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+      })
+      .catch((error) => console.error('Error downloading the file:', error));
   };
 
   return (

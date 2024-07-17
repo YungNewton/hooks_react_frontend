@@ -17,3 +17,4 @@ SuccessScreen.propTypes = {
 };
 
 export default SuccessScreen;
+

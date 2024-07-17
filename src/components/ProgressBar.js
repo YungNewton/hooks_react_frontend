@@ -5,7 +5,7 @@ import { io } from 'socket.io-client';
 
 const ProgressBar = ({ taskId, progress, step, stepVisible }) => {
   useEffect(() => {
-    const socket = io('https://hooks-backend.onrender.com');
+    const socket = io('http://localhost:5000');
 
     socket.on('progress', (data) => {
       if (data.task_id === taskId) {
