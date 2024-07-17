@@ -4,7 +4,7 @@ import ProgressBar from './ProgressBar';
 import SuccessScreen from './SuccessScreen';
 import './Main.css';
 
-const socket = io('http://localhost:5000/');
+const socket = io('https://hooks-backend.onrender.com/');
 
 const Main = () => {
   const [formId, setFormId] = useState('mainForm');
@@ -41,7 +41,7 @@ const Main = () => {
         clearInterval(logInterval);
         setFormId('successScreen');
 
-        fetch('http://localhost:5000/download_output', {
+        fetch('https://hooks-backend.onrender.com/download_output', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/zip',
@@ -100,7 +100,7 @@ const Main = () => {
     setProgress(0);
     setStepVisible(false);
 
-    fetch('http://localhost:5000/process', {
+    fetch('https://hooks-backend.onrender.com/process', {
       method: 'POST',
       body: formData,
       signal: controller.signal,
@@ -131,7 +131,7 @@ const Main = () => {
     }
 
     if (taskId) {
-      fetch('http://localhost:5000/cancel_task', {
+      fetch('https://hooks-backend.onrender.com/cancel_task', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ task_id: taskId }),
