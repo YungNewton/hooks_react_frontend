@@ -1,22 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import io from 'socket.io-client';
-import ProgressBar from './ProgressBar';
-import SuccessScreen from './SuccessScreen';
 import './Main.css';
 
 const socket = io('http://localhost:5000/');
 
 const Main = () => {
   const [formId, setFormId] = useState('mainForm');
-  const [progress, setProgress] = useState(0);
-  const [stepVisible, setStepVisible] = useState(false);
-  const [step, setStep] = useState('');
   const [taskId, setTaskId] = useState(null);
   const [uploadController, setUploadController] = useState(null);
-  const [zipPath, setZipPath] = useState('');
+  const [videoLinks, setVideoLinks] = useState([]);
+  const [zipLink, setZipLink] = useState('');
 
   useEffect(() => {
-    let progressData = null;
     let logInterval = null;
 
     socket.on('connect', () => {
@@ -27,22 +22,16 @@ const Main = () => {
       console.log('WebSocket disconnected');
     });
 
-    socket.on('progress', (data) => {
+    socket.on('video_link', (data) => {
       if (data.task_id === taskId) {
-        progressData = data;
-        setProgress(data.progress);
-        setStep(data.step);
-        setStepVisible(true);
-        console.log('Received progress:', data);
+        setVideoLinks((prevLinks) => [...prevLinks, { link: data.video_link, name: data.file_name }]);
       }
     });
 
-    socket.on('task_complete', (data) => {
+    socket.on('zip_complete', (data) => {
       if (data.task_id === taskId) {
-        clearInterval(logInterval);
-        setZipPath(data.zip_path);
-        setFormId('successScreen');
-        handleDownload(data.zip_path); // Automatically trigger the download
+        setZipLink(data.zip_path);
+        setFormId('completeScreen');
       }
     });
 
@@ -55,8 +44,9 @@ const Main = () => {
     });
 
     logInterval = setInterval(() => {
-      if (progressData) {
-        console.log('Progress:', progressData.progress, 'Step:', progressData.step);
+      console.log('Current video links:', videoLinks);
+      if (zipLink) {
+        console.log('Final zip link:', zipLink);
       }
     }, 500);
 
@@ -64,11 +54,11 @@ const Main = () => {
       clearInterval(logInterval);
       socket.off('connect');
       socket.off('disconnect');
-      socket.off('progress');
-      socket.off('task_complete');
+      socket.off('video_link');
+      socket.off('zip_complete');
       socket.off('error');
     };
-  }, [taskId]);
+  }, [taskId, videoLinks, zipLink]);
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -80,9 +70,6 @@ const Main = () => {
 
     const controller = new AbortController();
     setUploadController(controller);
-
-    setProgress(0);
-    setStepVisible(false);
 
     fetch('http://localhost:5000/process', {
       method: 'POST',
@@ -132,22 +119,14 @@ const Main = () => {
     }
   };
 
-  const handleDownload = (path) => {
-    fetch(`http://localhost:5000/download_output?zip_path=${encodeURIComponent(path)}`, {
-      method: 'GET',
-    })
-      .then((response) => response.blob())
-      .then((blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        a.download = 'output.zip';
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-      })
-      .catch((error) => console.error('Error downloading the file:', error));
+  const handleGoBack = () => {
+    if (formId === 'progress') {
+      handleCancel();
+    } else {
+      setFormId('mainForm');
+      setVideoLinks([]);
+      setZipLink('');
+    }
   };
 
   return (
@@ -193,12 +172,30 @@ const Main = () => {
       )}
       {formId === 'progress' && (
         <div className="progress-container">
-          <ProgressBar progress={progress} step={step} stepVisible={stepVisible} />
-          <button className="cancel-button" onClick={handleCancel}>Cancel</button>
+          <div className="video-links-container">
+            <h2>Processing Videos...</h2>
+            <ul>
+              {videoLinks.map((link, index) => (
+                <li key={index}><a href={link.link} target="_blank" rel="noopener noreferrer">{link.name}</a></li>
+              ))}
+            </ul>
+          </div>
+          <button className="cancel-button" onClick={handleGoBack}>Cancel</button>
         </div>
       )}
-      {formId === 'successScreen' && (
-        <SuccessScreen onGoBack={() => setFormId('mainForm')} />
+      {formId === 'completeScreen' && (
+        <div className="progress-container">
+          <div className="video-links-container">
+            <h2>Processing Complete</h2>
+            <ul>
+              {videoLinks.map((link, index) => (
+                <li key={index}><a href={link.link} target="_blank" rel="noopener noreferrer">{link.name}</a></li>
+              ))}
+              {zipLink && <li><a href={`http://localhost:5000/download_output?zip_path=${zipLink}`} target="_blank" rel="noopener noreferrer">Download All Videos as Zip</a></li>}
+            </ul>
+          </div>
+          <button className="go-back-button" onClick={handleGoBack}>Go Back</button>
+        </div>
       )}
     </div>
   );

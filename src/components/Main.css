@@ -142,6 +142,41 @@ input[type="number"]::placeholder {
   margin-top: 10px;
 }
 
+.video-links-container {
+  text-align: left;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #1f1e1e;
+  border: 1px solid #00ff00;
+  border-radius: 5px;
+}
+
+.video-links-container ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.video-links-container li {
+  margin: 10px 0;
+}
+
+.video-links-container a {
+  color: #00ff00;
+  text-decoration: none;
+  background-color: #1f1e1e;
+  padding: 10px;
+  border: 1px solid #00ff00;
+  border-radius: 5px;
+  display: block;
+}
+
+.video-links-container a:hover {
+  background-color: #00cc00;
+  color: #000000;
+}
+
 @media (max-width: 600px) {
   .container {
     padding: 10px;
@@ -167,6 +202,7 @@ input[type="number"]::placeholder {
     padding: 8px;
   }
 }
+
 .highlighted {
   color: #000000 !important;
   background-color: #00ff00 !important;
