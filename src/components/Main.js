@@ -40,6 +40,18 @@ const Main = () => {
       if (data.task_id === taskId) {
         clearInterval(logInterval);
         setFormId('successScreen');
+        fetch(`http://localhost:5000/output.zip`)
+          .then(response => response.blob())
+          .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'output.zip';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+          });
       }
     });
 
