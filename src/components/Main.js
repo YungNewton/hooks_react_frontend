@@ -40,9 +40,15 @@ const Main = () => {
       if (data.task_id === taskId) {
         clearInterval(logInterval);
         setFormId('successScreen');
-        fetch(`http://localhost:5000/output.zip`)
-          .then(response => response.blob())
-          .then(blob => {
+
+        fetch('http://localhost:5000/download_output', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/zip',
+          },
+        })
+          .then((response) => response.blob())
+          .then((blob) => {
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.style.display = 'none';
@@ -51,7 +57,8 @@ const Main = () => {
             document.body.appendChild(a);
             a.click();
             window.URL.revokeObjectURL(url);
-          });
+          })
+          .catch((error) => console.error('Error downloading the file:', error));
       }
     });
 
